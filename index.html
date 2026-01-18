@@ -2,225 +2,170 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mobile Chat</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<style>
-:root{
-  --bg:#0f172a;
-  --bg2:#020617;
-  --accent:#22c55e;
-  --me:#14532d;
-  --other:#1e293b;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-}
-*{box-sizing:border-box;font-family:system-ui}
-body{margin:0;background:var(--bg2);color:var(--text);height:100vh}
 
-/* SCREENS */
-.screen{position:fixed;inset:0;display:none}
+<style>
+body{
+  margin:0;
+  background:#0f172a;
+  color:#fff;
+  font-family:Arial, sans-serif;
+}
+.screen{display:none;height:100vh}
 .show{display:block}
 
 /* LOGIN */
-.login{display:flex;align-items:center;justify-content:center}
-.login-box{background:var(--bg);padding:24px;border-radius:16px;width:90%}
-.login-box h2{text-align:center}
-.login-box input,.login-box button{
-  width:100%;padding:14px;border-radius:12px;border:none;margin-top:12px
+#login{
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
-.login-box button{background:var(--accent);font-weight:600}
+#loginBox{
+  background:#020617;
+  padding:20px;
+  border-radius:12px;
+  width:90%;
+}
+#loginBox input,#loginBox button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+}
+#loginBox button{background:#22c55e}
 
-/* HEADER */
-.header{
-  height:56px;background:#020617;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:600
+/* LIST */
+#listHeader{
+  height:50px;
+  background:#020617;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
-
-/* DIALOG LIST */
-.dialogs{height:calc(100vh - 56px);overflow-y:auto}
-.dialog{
-  display:flex;gap:12px;padding:12px;
-  border-bottom:1px solid #1e293b;align-items:center
+.chatItem{
+  padding:15px;
+  border-bottom:1px solid #1e293b;
 }
-.avatar{
-  width:48px;height:48px;border-radius:50%;
-  background:var(--accent);color:#000;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:700
-}
-.dialog-name{font-weight:600}
-.dialog-last{font-size:13px;color:var(--muted)}
 
 /* CHAT */
-.chat{display:flex;flex-direction:column;background:var(--bg)}
-.chat-header{
-  height:56px;background:#020617;
-  display:flex;align-items:center;gap:12px;padding:0 12px
+#chatHeader{
+  height:50px;
+  background:#020617;
+  display:flex;
+  align-items:center;
 }
-.chat-header button{
-  background:none;border:none;color:#fff;font-size:20px
+#chatHeader button{
+  background:none;
+  border:none;
+  color:white;
+  font-size:20px;
+  margin:0 10px;
 }
-.messages{
-  flex:1;overflow-y:auto;padding:12px;
-  display:flex;flex-direction:column;gap:8px
+#messages{
+  height:calc(100vh - 100px);
+  padding:10px;
+  overflow-y:auto;
 }
-.message{
-  max-width:75%;padding:10px 12px;
-  border-radius:14px;font-size:15px
+.msg{
+  margin-bottom:8px;
+  padding:10px;
+  border-radius:10px;
+  max-width:70%;
 }
-.me{align-self:flex-end;background:var(--me)}
-.other{align-self:flex-start;background:var(--other)}
-.time{font-size:11px;color:var(--muted);text-align:right;margin-top:4px}
+.me{background:#14532d;margin-left:auto}
+.other{background:#1e293b}
 
-/* INPUT */
-.input{
-  height:60px;display:flex;gap:8px;
-  padding:0 10px;background:#020617;align-items:center
+#input{
+  height:50px;
+  display:flex;
 }
-.input input{
-  flex:1;padding:12px;border-radius:20px;border:none
+#input input{
+  flex:1;
+  padding:10px;
+  border:none;
 }
-.input button{
-  width:40px;height:40px;border-radius:50%;
-  border:none;background:var(--accent)
+#input button{
+  width:60px;
+  border:none;
+  background:#22c55e;
 }
 </style>
 </head>
+
 <body>
 
 <!-- LOGIN -->
-<div id="login" class="screen login show">
-  <div class="login-box">
-    <h2>Вход</h2>
-    <input id="userId" placeholder="Твой ID">
+<div id="login" class="screen show">
+  <div id="loginBox">
+    <h3>Вход</h3>
+    <input id="name" placeholder="Имя">
     <button id="loginBtn">Войти</button>
   </div>
 </div>
 
-<!-- CHAT LIST -->
+<!-- LIST -->
 <div id="list" class="screen">
-  <div class="header">Чаты</div>
-  <div class="dialogs" id="dialogs"></div>
+  <div id="listHeader">Чаты</div>
+  <div class="chatItem" id="openChat">Чат с Ботом</div>
 </div>
 
 <!-- CHAT -->
-<div id="chat" class="screen chat">
-  <div class="chat-header">
-    <button id="backBtn">←</button>
-    <span id="chatTitle"></span>
+<div id="chat" class="screen">
+  <div id="chatHeader">
+    <button id="back">←</button>
+    <span>Бот</span>
   </div>
-  <div class="messages" id="messages"></div>
-  <div class="input">
-    <input id="text" placeholder="Сообщение…">
-    <button id="sendBtn">➤</button>
+  <div id="messages"></div>
+  <div id="input">
+    <input id="text" placeholder="Сообщение">
+    <button id="send">➤</button>
   </div>
 </div>
 
 <script>
-'use strict';
-
-/* DATA */
-const USER_KEY='user';
-let chats={
-  alice:{name:'Алиса',messages:[]},
-  bob:{name:'Боб',messages:[]}
-};
-let currentChat=null;
-
-/* ELEMENTS */
 const login=document.getElementById('login');
 const list=document.getElementById('list');
 const chat=document.getElementById('chat');
-const dialogsEl=document.getElementById('dialogs');
-const messagesEl=document.getElementById('messages');
-const chatTitle=document.getElementById('chatTitle');
-const text=document.getElementById('text');
-
-/* LOGIN */
-if(localStorage.getItem(USER_KEY)) showList();
+const messages=document.getElementById('messages');
 
 document.getElementById('loginBtn').onclick=()=>{
-  const id=userId.value.trim();
-  if(!id) return alert('Введите ID');
-  localStorage.setItem(USER_KEY,id);
-  showList();
-};
-
-function showList(){
+  if(!name.value.trim()) return alert('Введите имя');
   login.classList.remove('show');
   list.classList.add('show');
-  renderDialogs();
-}
+};
 
-/* DIALOGS */
-function renderDialogs(){
-  dialogsEl.innerHTML='';
-  for(const k in chats){
-    const d=chats[k];
-    const last=d.messages.at(-1);
-    const div=document.createElement('div');
-    div.className='dialog';
-    div.innerHTML=`
-      <div class="avatar">${d.name[0]}</div>
-      <div>
-        <div class="dialog-name">${d.name}</div>
-        <div class="dialog-last">${last?last.text:''}</div>
-      </div>`;
-    div.onclick=()=>openChat(k);
-    dialogsEl.appendChild(div);
-  }
-}
-
-/* CHAT */
-function openChat(key){
-  currentChat=key;
+document.getElementById('openChat').onclick=()=>{
   list.classList.remove('show');
   chat.classList.add('show');
-  chatTitle.textContent=chats[key].name;
-  renderMessages();
-}
+};
 
-document.getElementById('backBtn').onclick=()=>{
+document.getElementById('back').onclick=()=>{
   chat.classList.remove('show');
   list.classList.add('show');
-  currentChat=null;
 };
 
-/* MESSAGES */
-function renderMessages(){
-  messagesEl.innerHTML='';
-  chats[currentChat].messages.forEach(m=>{
-    const div=document.createElement('div');
-    div.className='message '+m.sender;
-    div.innerHTML=`${m.text}<div class="time">${m.time}</div>`;
-    messagesEl.appendChild(div);
-  });
-  messagesEl.scrollTop=messagesEl.scrollHeight;
-}
+document.getElementById('send').onclick=()=>{
+  if(!text.value.trim()) return;
 
-document.getElementById('sendBtn').onclick=()=>{
-  if(!currentChat) return;
-  const t=text.value.trim();
-  if(!t) return;
-  chats[currentChat].messages.push({
-    text:t,sender:'me',time:time()
-  });
+  const my=document.createElement('div');
+  my.className='msg me';
+  my.textContent=text.value;
+  messages.appendChild(my);
+
   text.value='';
-  renderMessages();
-  setTimeout(()=>autoReply(),1000);
+  messages.scrollTop=messages.scrollHeight;
+
+  setTimeout(()=>{
+    const bot=document.createElement('div');
+    bot.className='msg other';
+    bot.textContent='Ответ 👍';
+    messages.appendChild(bot);
+    messages.scrollTop=messages.scrollHeight;
+  },800);
 };
-
-function autoReply(){
-  chats[currentChat].messages.push({
-    text:'Ок 👍',sender:'other',time:time()
-  });
-  renderMessages();
-}
-
-function time(){
-  return new Date().toLocaleTimeString().slice(0,5);
-}
 </script>
+
 </body>
 </html>
