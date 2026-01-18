@@ -2,117 +2,225 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Веб-мессенджер</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Mobile Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <style>
-:root{--bg:#fff;--bg2:#f3f4f6;--text:#000;--border:#ddd;--accent:#4a76a8;--me:#dcf8c6}
-body.dark{--bg:#0f172a;--bg2:#020617;--text:#e5e7eb;--border:#1e293b;--accent:#2563eb;--me:#14532d}
-*{box-sizing:border-box;font-family:Arial}
-body{margin:0;background:var(--bg2);color:var(--text);height:100vh;overflow:hidden}
-.hidden{display:none}
-.app{height:100vh;display:flex}
-.sidebar{width:100%;max-width:320px;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--bg)}
-.sidebar-header{padding:12px;background:var(--accent);color:#fff;display:flex;justify-content:space-between;align-items:center}
-.dialogs{flex:1;overflow-y:auto}
-.dialog{display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--border);cursor:pointer;align-items:center}
-.dialog .info{flex:1}
-.unread{background:red;color:#fff;font-size:11px;padding:2px 6px;border-radius:10px}
-.avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;position:relative}
-.online::after{content:'';position:absolute;bottom:2px;right:2px;width:10px;height:10px;background:#22c55e;border-radius:50%}
-.chat{flex:1;display:flex;flex-direction:column;position:relative;background:var(--bg)}
-.chat-header{padding:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.messages{flex:1;padding:12px;overflow-y:auto}
-.message{max-width:75%;margin-bottom:8px;padding:8px 10px;border-radius:12px;word-wrap:break-word}
-.me{background:var(--me);margin-left:auto}
-.other{background:var(--bg);border:1px solid var(--border)}
-.message img,.message video{max-width:200px;border-radius:10px}
-.time{font-size:11px;opacity:.6;text-align:right}
-.status{font-size:12px;opacity:.7;padding:4px 12px}
-.input-area{display:flex;padding:8px;gap:6px;border-top:1px solid var(--border);align-items:center}
-.input-area input[type=text]{flex:1;padding:10px;border-radius:20px;border:1px solid var(--border)}
-.input-area button{padding:0 10px;border-radius:50%;border:none;background:var(--accent);color:#fff}
-@media(max-width:768px){
-  .sidebar{position:absolute;inset:0;z-index:2;background:var(--bg)}
-  .chat{position:absolute;inset:0;z-index:3;background:var(--bg)}
-  .chat.hidden{display:none}
-  .sidebar.hidden{display:none}
+:root{
+  --bg:#0f172a;
+  --bg2:#020617;
+  --accent:#22c55e;
+  --me:#14532d;
+  --other:#1e293b;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
 }
-  .sidebar{position:absolute;inset:0;z-index:2}
-  .chat{position:absolute;inset:0;z-index:3}
-  .chat.hidden{display:none}
+*{box-sizing:border-box;font-family:system-ui}
+body{margin:0;background:var(--bg2);color:var(--text);height:100vh}
+
+/* SCREENS */
+.screen{position:fixed;inset:0;display:none}
+.show{display:block}
+
+/* LOGIN */
+.login{display:flex;align-items:center;justify-content:center}
+.login-box{background:var(--bg);padding:24px;border-radius:16px;width:90%}
+.login-box h2{text-align:center}
+.login-box input,.login-box button{
+  width:100%;padding:14px;border-radius:12px;border:none;margin-top:12px
 }
-  .sidebar{width:100%;max-width:none;position:absolute;inset:0;z-index:2}
-  .chat{position:absolute;inset:0;z-index:1}
-  .chat.hidden{display:none}
-  .messages{padding:10px}
-  .message{max-width:85%}
-  .input-area{padding:6px}
-  .input-area input[type=text]{font-size:16px}
-  .dialog{padding:12px}
-}.chat{position:absolute;inset:0;z-index:1}.chat.hidden{display:none}}
+.login-box button{background:var(--accent);font-weight:600}
+
+/* HEADER */
+.header{
+  height:56px;background:#020617;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600
+}
+
+/* DIALOG LIST */
+.dialogs{height:calc(100vh - 56px);overflow-y:auto}
+.dialog{
+  display:flex;gap:12px;padding:12px;
+  border-bottom:1px solid #1e293b;align-items:center
+}
+.avatar{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--accent);color:#000;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700
+}
+.dialog-name{font-weight:600}
+.dialog-last{font-size:13px;color:var(--muted)}
+
+/* CHAT */
+.chat{display:flex;flex-direction:column;background:var(--bg)}
+.chat-header{
+  height:56px;background:#020617;
+  display:flex;align-items:center;gap:12px;padding:0 12px
+}
+.chat-header button{
+  background:none;border:none;color:#fff;font-size:20px
+}
+.messages{
+  flex:1;overflow-y:auto;padding:12px;
+  display:flex;flex-direction:column;gap:8px
+}
+.message{
+  max-width:75%;padding:10px 12px;
+  border-radius:14px;font-size:15px
+}
+.me{align-self:flex-end;background:var(--me)}
+.other{align-self:flex-start;background:var(--other)}
+.time{font-size:11px;color:var(--muted);text-align:right;margin-top:4px}
+
+/* INPUT */
+.input{
+  height:60px;display:flex;gap:8px;
+  padding:0 10px;background:#020617;align-items:center
+}
+.input input{
+  flex:1;padding:12px;border-radius:20px;border:none
+}
+.input button{
+  width:40px;height:40px;border-radius:50%;
+  border:none;background:var(--accent)
+}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">💬 Чаты <button id="themeBtn">🌙</button></div>
-    <div class="dialogs" id="dialogs"></div>
-  </div>
-  <div class="chat hidden" id="chat">
-    <div class="chat-header"><span id="chatTitle">Выберите чат</span><button id="backBtn">←</button></div>
-    <div class="messages" id="messages"></div>
-    <div id="typingStatus" class="status hidden">печатает…</div>
-    <div id="recordingStatus" class="status hidden">записывается…</div>
-    <div class="input-area">
-      <input type="file" id="photoInput" accept="image/*" hidden>
-      <input type="file" id="videoInput" accept="video/*" hidden>
-      <button id="photoBtn">📎</button>
-      <button id="videoBtn">🎞</button>
-      <button id="recBtn">🎤</button>
-      <input id="messageInput" type="text" placeholder="Сообщение…" disabled>
-      <button id="sendBtn" disabled>➤</button>
-    </div>
+
+<!-- LOGIN -->
+<div id="login" class="screen login show">
+  <div class="login-box">
+    <h2>Вход</h2>
+    <input id="userId" placeholder="Твой ID">
+    <button id="loginBtn">Войти</button>
   </div>
 </div>
+
+<!-- CHAT LIST -->
+<div id="list" class="screen">
+  <div class="header">Чаты</div>
+  <div class="dialogs" id="dialogs"></div>
+</div>
+
+<!-- CHAT -->
+<div id="chat" class="screen chat">
+  <div class="chat-header">
+    <button id="backBtn">←</button>
+    <span id="chatTitle"></span>
+  </div>
+  <div class="messages" id="messages"></div>
+  <div class="input">
+    <input id="text" placeholder="Сообщение…">
+    <button id="sendBtn">➤</button>
+  </div>
+</div>
+
 <script>
 'use strict';
-const DATA_KEY='dialogs';
-let dialogs=JSON.parse(localStorage.getItem(DATA_KEY))||{
-  alice:{name:'Алиса',online:true,unread:0,messages:[]},
-  bob:{name:'Боб',online:false,unread:0,messages:[]}
+
+/* DATA */
+const USER_KEY='user';
+let chats={
+  alice:{name:'Алиса',messages:[]},
+  bob:{name:'Боб',messages:[]}
 };
-let current=null;
-let replyTo=null;
-let mediaRecorder,chunks=[];
-const dialogsEl=document.getElementById('dialogs');
+let currentChat=null;
+
+/* ELEMENTS */
+const login=document.getElementById('login');
+const list=document.getElementById('list');
 const chat=document.getElementById('chat');
-const chatTitle=document.getElementById('chatTitle');
+const dialogsEl=document.getElementById('dialogs');
 const messagesEl=document.getElementById('messages');
-const typingStatus=document.getElementById('typingStatus');
-const recordingStatus=document.getElementById('recordingStatus');
-const inputEl=document.getElementById('messageInput');
-const sendBtn=document.getElementById('sendBtn');
-const sidebar=document.getElementById('sidebar');
-const photoInput=document.getElementById('photoInput');
-const videoInput=document.getElementById('videoInput');
-function save(){localStorage.setItem(DATA_KEY,JSON.stringify(dialogs));}
-document.getElementById('themeBtn').onclick=()=>document.body.classList.toggle('dark');
-function renderDialogs(){dialogsEl.innerHTML='';for(const k in dialogs){const d=dialogs[k];const div=document.createElement('div');div.className='dialog';div.innerHTML=`<div class="avatar ${d.online?'online':''}">${d.name[0]}</div><div class="info">${d.name}<br><small>${d.online?'онлайн':'офлайн'}</small></div>${d.unread?`<div class="unread">${d.unread}</div>`:''}`;div.onclick=()=>openChat(k);dialogsEl.appendChild(div);}}
-function openChat(k){current=k;dialogs[k].unread=0;chatTitle.textContent=dialogs[k].name;chat.classList.remove('hidden');sidebar.classList.add('hidden');inputEl.disabled=false;sendBtn.disabled=false;save();renderDialogs();renderMessages();}
-document.getElementById('backBtn').onclick=()=>{chat.classList.add('hidden');sidebar.classList.remove('hidden');current=null;inputEl.disabled=true;sendBtn.disabled=true;}
-function renderMessages(){if(!current)return;messagesEl.innerHTML='';dialogs[current].messages.forEach(m=>{const div=document.createElement('div');div.className='message '+m.sender;div.innerHTML=(m.text||'')+`<div class="time">${m.time||''}</div>`;messagesEl.appendChild(div);});messagesEl.scrollTop=messagesEl.scrollHeight;}
-function now(){return new Date().toLocaleTimeString().slice(0,5);}
-function sendMessage(){if(!current)return;const t=inputEl.value.trim();if(!t)return;dialogs[current].messages.push({text:t,sender:'me',time:now()});inputEl.value='';save();renderMessages();simulateIncoming();}
-function simulateIncoming(){typingStatus.classList.remove('hidden');setTimeout(()=>{typingStatus.classList.add('hidden');if(!current)return;dialogs[current].messages.push({text:'Ответ 👍',sender:'other',time:now()});save();renderMessages();},1200);}
-function sendFile(input,type){if(!current)return;const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{dialogs[current].messages.push({[type]:r.result,sender:'me',time:now()});save();renderMessages();};r.readAsDataURL(f);input.value='';}
-function toggleRecord(){if(!current)return;if(mediaRecorder&&mediaRecorder.state==='recording'){mediaRecorder.stop();recordingStatus.classList.add('hidden');document.getElementById('recBtn').textContent='🎤';}else{navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{mediaRecorder=new MediaRecorder(s);chunks=[];mediaRecorder.start();recordingStatus.classList.remove('hidden');document.getElementById('recBtn').textContent='⏹';mediaRecorder.ondataavailable=e=>chunks.push(e.data);mediaRecorder.onstop=()=>{const b=new Blob(chunks,{type:'audio/webm'});const r=new FileReader();r.onload=()=>{dialogs[current].messages.push({audio:r.result,sender:'me',time:now()});save();renderMessages();};r.readAsDataURL(b);};});}}
-sendBtn.onclick=sendMessage;
-document.getElementById('photoBtn').onclick=()=>photoInput.click();
-document.getElementById('videoBtn').onclick=()=>videoInput.click();
-document.getElementById('recBtn').onclick=toggleRecord;
-photoInput.onchange=()=>sendFile(photoInput,'image');
-videoInput.onchange=()=>sendFile(videoInput,'video');
-renderDialogs();
+const chatTitle=document.getElementById('chatTitle');
+const text=document.getElementById('text');
+
+/* LOGIN */
+if(localStorage.getItem(USER_KEY)) showList();
+
+document.getElementById('loginBtn').onclick=()=>{
+  const id=userId.value.trim();
+  if(!id) return alert('Введите ID');
+  localStorage.setItem(USER_KEY,id);
+  showList();
+};
+
+function showList(){
+  login.classList.remove('show');
+  list.classList.add('show');
+  renderDialogs();
+}
+
+/* DIALOGS */
+function renderDialogs(){
+  dialogsEl.innerHTML='';
+  for(const k in chats){
+    const d=chats[k];
+    const last=d.messages.at(-1);
+    const div=document.createElement('div');
+    div.className='dialog';
+    div.innerHTML=`
+      <div class="avatar">${d.name[0]}</div>
+      <div>
+        <div class="dialog-name">${d.name}</div>
+        <div class="dialog-last">${last?last.text:''}</div>
+      </div>`;
+    div.onclick=()=>openChat(k);
+    dialogsEl.appendChild(div);
+  }
+}
+
+/* CHAT */
+function openChat(key){
+  currentChat=key;
+  list.classList.remove('show');
+  chat.classList.add('show');
+  chatTitle.textContent=chats[key].name;
+  renderMessages();
+}
+
+document.getElementById('backBtn').onclick=()=>{
+  chat.classList.remove('show');
+  list.classList.add('show');
+  currentChat=null;
+};
+
+/* MESSAGES */
+function renderMessages(){
+  messagesEl.innerHTML='';
+  chats[currentChat].messages.forEach(m=>{
+    const div=document.createElement('div');
+    div.className='message '+m.sender;
+    div.innerHTML=`${m.text}<div class="time">${m.time}</div>`;
+    messagesEl.appendChild(div);
+  });
+  messagesEl.scrollTop=messagesEl.scrollHeight;
+}
+
+document.getElementById('sendBtn').onclick=()=>{
+  if(!currentChat) return;
+  const t=text.value.trim();
+  if(!t) return;
+  chats[currentChat].messages.push({
+    text:t,sender:'me',time:time()
+  });
+  text.value='';
+  renderMessages();
+  setTimeout(()=>autoReply(),1000);
+};
+
+function autoReply(){
+  chats[currentChat].messages.push({
+    text:'Ок 👍',sender:'other',time:time()
+  });
+  renderMessages();
+}
+
+function time(){
+  return new Date().toLocaleTimeString().slice(0,5);
+}
 </script>
 </body>
 </html>
