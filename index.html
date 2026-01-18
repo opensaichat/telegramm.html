@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Telegram Web Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --bg:#0f172a;
+  --panel:#020617;
+  --chat:#020617;
+  --me:#2563eb;
+  --other:#1e293b;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+}
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto}
+body{margin:0;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+.hidden{display:none}
+
+/* AUTH */
+#auth{height:100vh;display:flex;align-items:center;justify-content:center}
+.auth-box{background:var(--panel);padding:30px;border-radius:12px;width:320px}
+.auth-box h2{text-align:center}
+.auth-box input{width:100%;padding:12px;border-radius:8px;border:none;background:#020617;color:var(--text)}
+.auth-box button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:8px;background:var(--me);color:#fff}
+
+/* APP */
+#app{display:flex;height:100vh}
+.sidebar{width:320px;background:var(--panel)}
+.sidebar-header{padding:16px;font-weight:600}
+.dialog{padding:12px;cursor:pointer}
+.dialog:hover{background:#020617}
+
+.chat{flex:1;display:flex;flex-direction:column;background:var(--chat)}
+.chat-header{padding:16px;border-bottom:1px solid #020617}
+.messages{flex:1;padding:16px;overflow-y:auto}
+.msg{max-width:65%;padding:10px 14px;border-radius:14px;margin-bottom:10px}
+.me{background:var(--me);margin-left:auto}
+.other{background:var(--other)}
+.time{font-size:11px;color:var(--muted);margin-top:4px;text-align:right}
+
+.typing{font-size:12px;color:var(--muted);padding:6px 16px}
+
+.input{display:flex;gap:8px;padding:12px;border-top:1px solid #020617}
+.input input{flex:1;padding:12px;border-radius:20px;border:none;background:#020617;color:var(--text)}
+.input button{border:none;background:var(--me);color:#fff;border-radius:20px;padding:0 14px;font-size:18px}
+
+.media{max-width:200px;border-radius:10px}
+
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="auth">
+  <div class="auth-box">
+    <h2>Регистрация</h2>
+    <input id="name" placeholder="Ваше имя">
+    <button id="start">Начать</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <div class="sidebar">
+    <div class="sidebar-header">Telegram Demo</div>
+    <div class="dialog">🤖 Telegram Bot</div>
+  </div>
+
+  <div class="chat">
+    <div class="chat-header">Telegram Bot</div>
+    <div class="messages" id="messages"></div>
+    <div class="typing hidden" id="typing">печатает…</div>
+
+    <div class="input">
+      <input type="file" id="photo" accept="image/*" hidden>
+      <input type="file" id="video" accept="video/*" hidden>
+      <button onclick="photo.click()">📷</button>
+      <button onclick="video.click()">🎞</button>
+      <button id="rec">🎤</button>
+      <input id="text" placeholder="Сообщение">
+      <button id="send">➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict'
+const auth=document.getElementById('auth')
+const app=document.getElementById('app')
+const messages=document.getElementById('messages')
+const typing=document.getElementById('typing')
+const input=document.getElementById('text')
+const photo=document.getElementById('photo')
+const video=document.getElementById('video')
+const rec=document.getElementById('rec')
+
+let mediaRecorder,chunks=[]
+let data=JSON.parse(localStorage.getItem('tg'))||[]
+
+function start(){
+  const n=document.getElementById('name').value.trim()
+  if(!n)return alert('Введите имя')
+  localStorage.setItem('user',n)
+  auth.classList.add('hidden')
+  app.classList.remove('hidden')
+  render()
+}
+document.getElementById('start').onclick=start
+if(localStorage.getItem('user')) start()
+
+function now(){return new Date().toLocaleTimeString().slice(0,5)}
+function save(){localStorage.setItem('tg',JSON.stringify(data))}
+
+function render(){
+  messages.innerHTML=''
+  data.forEach(m=>{
+    const el=document.createElement('div')
+    el.className='msg '+m.sender
+    if(m.img) el.innerHTML=`<img src="${m.img}" class="media"><div class="time">${m.time}</div>`
+    else if(m.video) el.innerHTML=`<video controls src="${m.video}" class="media"></video><div class="time">${m.time}</div>`
+    else if(m.audio) el.innerHTML=`<audio controls src="${m.audio}"></audio><div class="time">${m.time}</div>`
+    else el.innerHTML=`${m.text}<div class="time">${m.time}</div>`
+    messages.appendChild(el)
+  })
+  messages.scrollTop=messages.scrollHeight
+}
+
+function send(){
+  const t=input.value.trim()
+  if(!t)return
+  data.push({text:t,sender:'me',time:now()})
+  input.value=''
+  save();render()
+  reply()
+}
+
+function reply(){
+  typing.classList.remove('hidden')
+  setTimeout(()=>{
+    typing.classList.add('hidden')
+    data.push({text:'🤖 Я получил сообщение',sender:'other',time:now()})
+    save();render()
+  },1200)
+}
+
+document.getElementById('send').onclick=send
+input.addEventListener('keydown',e=>e.key==='Enter'&&send())
+
+photo.onchange=()=>sendFile(photo,'img')
+video.onchange=()=>sendFile(video,'video')
+
+function sendFile(input,type){
+  const f=input.files[0]; if(!f)return
+  const r=new FileReader()
+  r.onload=()=>{data.push({[type]:r.result,sender:'me',time:now()});save();render()}
+  r.readAsDataURL(f); input.value=''
+}
+
+rec.onclick=()=>{
+  if(mediaRecorder && mediaRecorder.state==='recording'){
+    mediaRecorder.stop(); rec.textContent='🎤'
+  }else{
+    navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
+      mediaRecorder=new MediaRecorder(s)
+      chunks=[]
+      mediaRecorder.start()
+      rec.textContent='⏹'
+      mediaRecorder.ondataavailable=e=>chunks.push(e.data)
+      mediaRecorder.onstop=()=>{
+        const b=new Blob(chunks,{type:'audio/webm'})
+        const r=new FileReader()
+        r.onload=()=>{data.push({audio:r.result,sender:'me',time:now()});save();render()}
+        r.readAsDataURL(b)
+      }
+    })
+  }
+}
+</script>
+</body>
+</html>
