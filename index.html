@@ -2,107 +2,99 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Веб‑мессенджер</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Веб-мессенджер</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <style>
 :root{--bg:#fff;--bg2:#f3f4f6;--text:#000;--border:#ddd;--accent:#4a76a8;--me:#dcf8c6}
 body.dark{--bg:#0f172a;--bg2:#020617;--text:#e5e7eb;--border:#1e293b;--accent:#2563eb;--me:#14532d}
 *{box-sizing:border-box;font-family:Arial}
 body{margin:0;background:var(--bg2);color:var(--text);height:100vh;overflow:hidden}
-.login,.app{height:100vh}
-.login{display:flex;align-items:center;justify-content:center}
-.login-box{background:var(--bg);padding:30px;border-radius:10px;width:280px}
-.app{display:none;flex-direction:row}
-.sidebar{width:320px;border-right:1px solid var(--border);display:flex;flex-direction:column}
-.sidebar-header{padding:12px;background:var(--accent);color:#fff;display:flex;justify-content:space-between}
+.hidden{display:none}
+.app{height:100vh;display:flex}
+.sidebar{width:100%;max-width:320px;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--bg)}
+.sidebar-header{padding:12px;background:var(--accent);color:#fff;display:flex;justify-content:space-between;align-items:center}
 .dialogs{flex:1;overflow-y:auto}
-.dialog{display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--border);cursor:pointer}
-.avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center}
-.chat{flex:1;display:flex;flex-direction:column;position:relative}
-.chat-header{padding:12px;border-bottom:1px solid var(--border)}
-.messages{flex:1;padding:15px;overflow-y:auto}
-.message{max-width:70%;margin-bottom:10px;padding:8px 10px;border-radius:12px}
+.dialog{display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--border);cursor:pointer;align-items:center}
+.dialog .info{flex:1}
+.unread{background:red;color:#fff;font-size:11px;padding:2px 6px;border-radius:10px}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;position:relative}
+.online::after{content:'';position:absolute;bottom:2px;right:2px;width:10px;height:10px;background:#22c55e;border-radius:50%}
+.chat{flex:1;display:flex;flex-direction:column;position:relative;background:var(--bg)}
+.chat-header{padding:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.messages{flex:1;padding:12px;overflow-y:auto}
+.message{max-width:75%;margin-bottom:8px;padding:8px 10px;border-radius:12px;word-wrap:break-word}
 .me{background:var(--me);margin-left:auto}
 .other{background:var(--bg);border:1px solid var(--border)}
+.message img,.message video{max-width:200px;border-radius:10px}
 .time{font-size:11px;opacity:.6;text-align:right}
-.input-area{display:flex;padding:10px;gap:6px;border-top:1px solid var(--border)}
-.input-area input{flex:1;padding:10px;border-radius:20px;border:1px solid var(--border)}
-.input-area button{padding:0 14px;border-radius:20px;border:none;background:var(--accent);color:#fff}
-@media(max-width:768px){.sidebar{width:100%}.chat{position:absolute;inset:0;background:var(--bg);transform:translateX(100%);transition:.3s}.chat.active{transform:translateX(0)}}
+.status{font-size:12px;opacity:.7;padding:4px 12px}
+.input-area{display:flex;padding:8px;gap:6px;border-top:1px solid var(--border);align-items:center}
+.input-area input[type=text]{flex:1;padding:10px;border-radius:20px;border:1px solid var(--border)}
+.input-area button{padding:0 10px;border-radius:50%;border:none;background:var(--accent);color:#fff}
+@media(max-width:768px){.sidebar{position:absolute;inset:0;z-index:2}.chat{position:absolute;inset:0;z-index:1}.chat.hidden{display:none}}
 </style>
 </head>
 <body>
-<div class="login" id="loginScreen">
-  <div class="login-box">
-    <h3>Вход</h3>
-    <input id="username" placeholder="Имя">
-    <button id="loginBtn">Войти</button>
-  </div>
-</div>
-<div class="app" id="app">
-  <div class="sidebar">
-    <div class="sidebar-header">💬 Диалоги <button id="themeBtn">🌙</button></div>
+<div class="app">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">💬 Чаты <button id="themeBtn">🌙</button></div>
     <div class="dialogs" id="dialogs"></div>
   </div>
-  <div class="chat" id="chat">
-    <div class="chat-header" id="chatTitle"></div>
+  <div class="chat hidden" id="chat">
+    <div class="chat-header"><span id="chatTitle">Выберите чат</span><button id="backBtn">←</button></div>
     <div class="messages" id="messages"></div>
-    <div id="typing" style="padding:5px;font-size:12px;display:none">печатает…</div>
-    <div id="recording" style="padding:5px;font-size:12px;display:none">записывается…</div>
+    <div id="typingStatus" class="status hidden">печатает…</div>
+    <div id="recordingStatus" class="status hidden">записывается…</div>
     <div class="input-area">
       <input type="file" id="photoInput" accept="image/*" hidden>
       <input type="file" id="videoInput" accept="video/*" hidden>
       <button id="photoBtn">📎</button>
       <button id="videoBtn">🎞</button>
       <button id="recBtn">🎤</button>
-      <input id="messageInput" placeholder="Сообщение…">
-      <button id="sendBtn">➤</button>
+      <input id="messageInput" type="text" placeholder="Сообщение…" disabled>
+      <button id="sendBtn" disabled>➤</button>
     </div>
   </div>
 </div>
 <script>
 'use strict';
-const USER_KEY='user',DATA_KEY='data';
-let user=localStorage.getItem(USER_KEY);
-let dialogsData=JSON.parse(localStorage.getItem(DATA_KEY))||{alice:{name:'Алиса',messages:[]}};
-let current='alice';
-const loginScreen=document.getElementById('loginScreen');
-const appEl=document.getElementById('app');
+const DATA_KEY='dialogs';
+let dialogs=JSON.parse(localStorage.getItem(DATA_KEY))||{
+  alice:{name:'Алиса',online:true,unread:0,messages:[]},
+  bob:{name:'Боб',online:false,unread:0,messages:[]}
+};
+let current=null;
+let replyTo=null;
+let mediaRecorder,chunks=[];
 const dialogsEl=document.getElementById('dialogs');
-const messagesEl=document.getElementById('messages');
-const chatEl=document.getElementById('chat');
+const chat=document.getElementById('chat');
 const chatTitle=document.getElementById('chatTitle');
+const messagesEl=document.getElementById('messages');
+const typingStatus=document.getElementById('typingStatus');
+const recordingStatus=document.getElementById('recordingStatus');
 const inputEl=document.getElementById('messageInput');
-const typingEl=document.getElementById('typing');
-const recordingEl=document.getElementById('recording');
-const usernameInput=document.getElementById('username');
+const sendBtn=document.getElementById('sendBtn');
+const sidebar=document.getElementById('sidebar');
 const photoInput=document.getElementById('photoInput');
 const videoInput=document.getElementById('videoInput');
-const recBtn=document.getElementById('recBtn');
-let mediaRecorder,chunks=[];
-function doLogin(){const n=usernameInput.value.trim();if(!n)return alert('Введите имя');localStorage.setItem(USER_KEY,n);user=n;init();}
-function init(){loginScreen.style.display='none';appEl.style.display='flex';renderDialogs();openDialog(current);}
-if(user) init();
-function toggleTheme(){document.body.classList.toggle('dark');}
-function renderDialogs(){dialogsEl.innerHTML='';for(const k in dialogsData){const d=dialogsData[k];const div=document.createElement('div');div.className='dialog';div.onclick=()=>openDialog(k);div.innerHTML=`<div class="avatar">${d.name[0]}</div>${d.name}`;dialogsEl.appendChild(div);}}
-function openDialog(k){current=k;chatTitle.textContent=dialogsData[k].name;renderMessages();chatEl.classList.add('active');}
-function renderMessages(){messagesEl.innerHTML='';dialogsData[current].messages.forEach((m,i)=>{const div=document.createElement('div');div.className='message '+m.sender;if(m.image)div.innerHTML=`<img src="${m.image}" style="max-width:200px;cursor:pointer" onclick="openImage('${m.image}')"><div class="time">${m.time}</div>`;else if(m.video)div.innerHTML=`<video controls src="${m.video}" style="max-width:200px"></video><div class="time">${m.time}</div>`;else if(m.audio)div.innerHTML=`<audio controls src="${m.audio}"></audio><div class="time">${m.time}</div>`;else div.innerHTML=`${m.text}<div class="time">${m.time}</div>`;enableSwipe(div,i);messagesEl.appendChild(div);});messagesEl.scrollTop=messagesEl.scrollHeight;}
-function enableSwipe(el,index){let x0=0;el.addEventListener('touchstart',e=>x0=e.touches[0].clientX);el.addEventListener('touchend',e=>{if(e.changedTouches[0].clientX-x0<-60){dialogsData[current].messages.splice(index,1);save();renderMessages();}});}
-function sendMessage(){const t=inputEl.value.trim();if(!t)return;dialogsData[current].messages.push({text:t,sender:'me',time:now()});inputEl.value='';save();renderMessages();simulateIncoming();}
-function simulateIncoming(){typingEl.style.display='block';setTimeout(()=>{typingEl.style.display='none';dialogsData[current].messages.push({text:'Ок 👍',sender:'other',time:now()});save();renderMessages();},1200);}
-function sendFile(input,type){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{dialogsData[current].messages.push({[type]:r.result,sender:'me',time:now()});save();renderMessages();};r.readAsDataURL(f);input.value='';}
-function toggleRecord(){if(mediaRecorder&&mediaRecorder.state==='recording'){mediaRecorder.stop();recBtn.textContent='🎤';recordingEl.style.display='none';}else{navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{mediaRecorder=new MediaRecorder(s);chunks=[];mediaRecorder.start();recBtn.textContent='⏹';recordingEl.style.display='block';mediaRecorder.ondataavailable=e=>chunks.push(e.data);mediaRecorder.onstop=()=>{const b=new Blob(chunks,{type:'audio/webm'});const r=new FileReader();r.onload=()=>{dialogsData[current].messages.push({audio:r.result,sender:'me',time:now()});save();renderMessages();};r.readAsDataURL(b);};});}}
-function openImage(src){const o=document.createElement('div');o.style='position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center';o.innerHTML=`<img src="${src}" style="max-width:90%;max-height:90%">`;o.onclick=()=>o.remove();document.body.appendChild(o);}
-function save(){localStorage.setItem(DATA_KEY,JSON.stringify(dialogsData));}
+function save(){localStorage.setItem(DATA_KEY,JSON.stringify(dialogs));}
+document.getElementById('themeBtn').onclick=()=>document.body.classList.toggle('dark');
+function renderDialogs(){dialogsEl.innerHTML='';for(const k in dialogs){const d=dialogs[k];const div=document.createElement('div');div.className='dialog';div.innerHTML=`<div class="avatar ${d.online?'online':''}">${d.name[0]}</div><div class="info">${d.name}<br><small>${d.online?'онлайн':'офлайн'}</small></div>${d.unread?`<div class="unread">${d.unread}</div>`:''}`;div.onclick=()=>openChat(k);dialogsEl.appendChild(div);}}
+function openChat(k){current=k;dialogs[k].unread=0;chatTitle.textContent=dialogs[k].name;chat.classList.remove('hidden');sidebar.classList.add('hidden');inputEl.disabled=false;sendBtn.disabled=false;save();renderDialogs();renderMessages();}
+document.getElementById('backBtn').onclick=()=>{chat.classList.add('hidden');sidebar.classList.remove('hidden');current=null;inputEl.disabled=true;sendBtn.disabled=true;}
+function renderMessages(){if(!current)return;messagesEl.innerHTML='';dialogs[current].messages.forEach(m=>{const div=document.createElement('div');div.className='message '+m.sender;div.innerHTML=(m.text||'')+`<div class="time">${m.time||''}</div>`;messagesEl.appendChild(div);});messagesEl.scrollTop=messagesEl.scrollHeight;}
 function now(){return new Date().toLocaleTimeString().slice(0,5);}
-document.getElementById('loginBtn').onclick=doLogin;
-document.getElementById('themeBtn').onclick=toggleTheme;
-document.getElementById('sendBtn').onclick=sendMessage;
+function sendMessage(){if(!current)return;const t=inputEl.value.trim();if(!t)return;dialogs[current].messages.push({text:t,sender:'me',time:now()});inputEl.value='';save();renderMessages();simulateIncoming();}
+function simulateIncoming(){typingStatus.classList.remove('hidden');setTimeout(()=>{typingStatus.classList.add('hidden');if(!current)return;dialogs[current].messages.push({text:'Ответ 👍',sender:'other',time:now()});save();renderMessages();},1200);}
+function sendFile(input,type){if(!current)return;const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{dialogs[current].messages.push({[type]:r.result,sender:'me',time:now()});save();renderMessages();};r.readAsDataURL(f);input.value='';}
+function toggleRecord(){if(!current)return;if(mediaRecorder&&mediaRecorder.state==='recording'){mediaRecorder.stop();recordingStatus.classList.add('hidden');document.getElementById('recBtn').textContent='🎤';}else{navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{mediaRecorder=new MediaRecorder(s);chunks=[];mediaRecorder.start();recordingStatus.classList.remove('hidden');document.getElementById('recBtn').textContent='⏹';mediaRecorder.ondataavailable=e=>chunks.push(e.data);mediaRecorder.onstop=()=>{const b=new Blob(chunks,{type:'audio/webm'});const r=new FileReader();r.onload=()=>{dialogs[current].messages.push({audio:r.result,sender:'me',time:now()});save();renderMessages();};r.readAsDataURL(b);};});}}
+sendBtn.onclick=sendMessage;
 document.getElementById('photoBtn').onclick=()=>photoInput.click();
 document.getElementById('videoBtn').onclick=()=>videoInput.click();
+document.getElementById('recBtn').onclick=toggleRecord;
 photoInput.onchange=()=>sendFile(photoInput,'image');
 videoInput.onchange=()=>sendFile(videoInput,'video');
-recBtn.onclick=toggleRecord;
+renderDialogs();
 </script>
 </body>
 </html>
