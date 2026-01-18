@@ -32,7 +32,15 @@ body{margin:0;background:var(--bg2);color:var(--text);height:100vh;overflow:hidd
 .input-area input[type=text]{flex:1;padding:10px;border-radius:20px;border:1px solid var(--border)}
 .input-area button{padding:0 10px;border-radius:50%;border:none;background:var(--accent);color:#fff}
 @media(max-width:768px){
-  .app{flex-direction:column}
+  .sidebar{position:absolute;inset:0;z-index:2;background:var(--bg)}
+  .chat{position:absolute;inset:0;z-index:3;background:var(--bg)}
+  .chat.hidden{display:none}
+  .sidebar.hidden{display:none}
+}
+  .sidebar{position:absolute;inset:0;z-index:2}
+  .chat{position:absolute;inset:0;z-index:3}
+  .chat.hidden{display:none}
+}
   .sidebar{width:100%;max-width:none;position:absolute;inset:0;z-index:2}
   .chat{position:absolute;inset:0;z-index:1}
   .chat.hidden{display:none}
