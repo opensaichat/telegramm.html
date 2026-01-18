@@ -2,181 +2,107 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Telegram Web Demo</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Веб‑мессенджер</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-:root{
-  --bg:#0f172a;
-  --panel:#020617;
-  --chat:#020617;
-  --me:#2563eb;
-  --other:#1e293b;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-}
-*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto}
-body{margin:0;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
-.hidden{display:none}
-
-/* AUTH */
-#auth{height:100vh;display:flex;align-items:center;justify-content:center}
-.auth-box{background:var(--panel);padding:30px;border-radius:12px;width:320px}
-.auth-box h2{text-align:center}
-.auth-box input{width:100%;padding:12px;border-radius:8px;border:none;background:#020617;color:var(--text)}
-.auth-box button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:8px;background:var(--me);color:#fff}
-
-/* APP */
-#app{display:flex;height:100vh}
-.sidebar{width:320px;background:var(--panel)}
-.sidebar-header{padding:16px;font-weight:600}
-.dialog{padding:12px;cursor:pointer}
-.dialog:hover{background:#020617}
-
-.chat{flex:1;display:flex;flex-direction:column;background:var(--chat)}
-.chat-header{padding:16px;border-bottom:1px solid #020617}
-.messages{flex:1;padding:16px;overflow-y:auto}
-.msg{max-width:65%;padding:10px 14px;border-radius:14px;margin-bottom:10px}
+:root{--bg:#fff;--bg2:#f3f4f6;--text:#000;--border:#ddd;--accent:#4a76a8;--me:#dcf8c6}
+body.dark{--bg:#0f172a;--bg2:#020617;--text:#e5e7eb;--border:#1e293b;--accent:#2563eb;--me:#14532d}
+*{box-sizing:border-box;font-family:Arial}
+body{margin:0;background:var(--bg2);color:var(--text);height:100vh;overflow:hidden}
+.login,.app{height:100vh}
+.login{display:flex;align-items:center;justify-content:center}
+.login-box{background:var(--bg);padding:30px;border-radius:10px;width:280px}
+.app{display:none;flex-direction:row}
+.sidebar{width:320px;border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar-header{padding:12px;background:var(--accent);color:#fff;display:flex;justify-content:space-between}
+.dialogs{flex:1;overflow-y:auto}
+.dialog{display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--border);cursor:pointer}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center}
+.chat{flex:1;display:flex;flex-direction:column;position:relative}
+.chat-header{padding:12px;border-bottom:1px solid var(--border)}
+.messages{flex:1;padding:15px;overflow-y:auto}
+.message{max-width:70%;margin-bottom:10px;padding:8px 10px;border-radius:12px}
 .me{background:var(--me);margin-left:auto}
-.other{background:var(--other)}
-.time{font-size:11px;color:var(--muted);margin-top:4px;text-align:right}
-
-.typing{font-size:12px;color:var(--muted);padding:6px 16px}
-
-.input{display:flex;gap:8px;padding:12px;border-top:1px solid #020617}
-.input input{flex:1;padding:12px;border-radius:20px;border:none;background:#020617;color:var(--text)}
-.input button{border:none;background:var(--me);color:#fff;border-radius:20px;padding:0 14px;font-size:18px}
-
-.media{max-width:200px;border-radius:10px}
-
+.other{background:var(--bg);border:1px solid var(--border)}
+.time{font-size:11px;opacity:.6;text-align:right}
+.input-area{display:flex;padding:10px;gap:6px;border-top:1px solid var(--border)}
+.input-area input{flex:1;padding:10px;border-radius:20px;border:1px solid var(--border)}
+.input-area button{padding:0 14px;border-radius:20px;border:none;background:var(--accent);color:#fff}
+@media(max-width:768px){.sidebar{width:100%}.chat{position:absolute;inset:0;background:var(--bg);transform:translateX(100%);transition:.3s}.chat.active{transform:translateX(0)}}
 </style>
 </head>
 <body>
-
-<!-- LOGIN -->
-<div id="auth">
-  <div class="auth-box">
-    <h2>Регистрация</h2>
-    <input id="name" placeholder="Ваше имя">
-    <button id="start">Начать</button>
+<div class="login" id="loginScreen">
+  <div class="login-box">
+    <h3>Вход</h3>
+    <input id="username" placeholder="Имя">
+    <button id="loginBtn">Войти</button>
   </div>
 </div>
-
-<!-- APP -->
-<div id="app" class="hidden">
+<div class="app" id="app">
   <div class="sidebar">
-    <div class="sidebar-header">Telegram Demo</div>
-    <div class="dialog">🤖 Telegram Bot</div>
+    <div class="sidebar-header">💬 Диалоги <button id="themeBtn">🌙</button></div>
+    <div class="dialogs" id="dialogs"></div>
   </div>
-
-  <div class="chat">
-    <div class="chat-header">Telegram Bot</div>
+  <div class="chat" id="chat">
+    <div class="chat-header" id="chatTitle"></div>
     <div class="messages" id="messages"></div>
-    <div class="typing hidden" id="typing">печатает…</div>
-
-    <div class="input">
-      <input type="file" id="photo" accept="image/*" hidden>
-      <input type="file" id="video" accept="video/*" hidden>
-      <button onclick="photo.click()">📷</button>
-      <button onclick="video.click()">🎞</button>
-      <button id="rec">🎤</button>
-      <input id="text" placeholder="Сообщение">
-      <button id="send">➤</button>
+    <div id="typing" style="padding:5px;font-size:12px;display:none">печатает…</div>
+    <div id="recording" style="padding:5px;font-size:12px;display:none">записывается…</div>
+    <div class="input-area">
+      <input type="file" id="photoInput" accept="image/*" hidden>
+      <input type="file" id="videoInput" accept="video/*" hidden>
+      <button id="photoBtn">📎</button>
+      <button id="videoBtn">🎞</button>
+      <button id="recBtn">🎤</button>
+      <input id="messageInput" placeholder="Сообщение…">
+      <button id="sendBtn">➤</button>
     </div>
   </div>
 </div>
-
 <script>
-'use strict'
-const auth=document.getElementById('auth')
-const app=document.getElementById('app')
-const messages=document.getElementById('messages')
-const typing=document.getElementById('typing')
-const input=document.getElementById('text')
-const photo=document.getElementById('photo')
-const video=document.getElementById('video')
-const rec=document.getElementById('rec')
-
-let mediaRecorder,chunks=[]
-let data=JSON.parse(localStorage.getItem('tg'))||[]
-
-function start(){
-  const n=document.getElementById('name').value.trim()
-  if(!n)return alert('Введите имя')
-  localStorage.setItem('user',n)
-  auth.classList.add('hidden')
-  app.classList.remove('hidden')
-  render()
-}
-document.getElementById('start').onclick=start
-if(localStorage.getItem('user')) start()
-
-function now(){return new Date().toLocaleTimeString().slice(0,5)}
-function save(){localStorage.setItem('tg',JSON.stringify(data))}
-
-function render(){
-  messages.innerHTML=''
-  data.forEach(m=>{
-    const el=document.createElement('div')
-    el.className='msg '+m.sender
-    if(m.img) el.innerHTML=`<img src="${m.img}" class="media"><div class="time">${m.time}</div>`
-    else if(m.video) el.innerHTML=`<video controls src="${m.video}" class="media"></video><div class="time">${m.time}</div>`
-    else if(m.audio) el.innerHTML=`<audio controls src="${m.audio}"></audio><div class="time">${m.time}</div>`
-    else el.innerHTML=`${m.text}<div class="time">${m.time}</div>`
-    messages.appendChild(el)
-  })
-  messages.scrollTop=messages.scrollHeight
-}
-
-function send(){
-  const t=input.value.trim()
-  if(!t)return
-  data.push({text:t,sender:'me',time:now()})
-  input.value=''
-  save();render()
-  reply()
-}
-
-function reply(){
-  typing.classList.remove('hidden')
-  setTimeout(()=>{
-    typing.classList.add('hidden')
-    data.push({text:'🤖 Я получил сообщение',sender:'other',time:now()})
-    save();render()
-  },1200)
-}
-
-document.getElementById('send').onclick=send
-input.addEventListener('keydown',e=>e.key==='Enter'&&send())
-
-photo.onchange=()=>sendFile(photo,'img')
-video.onchange=()=>sendFile(video,'video')
-
-function sendFile(input,type){
-  const f=input.files[0]; if(!f)return
-  const r=new FileReader()
-  r.onload=()=>{data.push({[type]:r.result,sender:'me',time:now()});save();render()}
-  r.readAsDataURL(f); input.value=''
-}
-
-rec.onclick=()=>{
-  if(mediaRecorder && mediaRecorder.state==='recording'){
-    mediaRecorder.stop(); rec.textContent='🎤'
-  }else{
-    navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
-      mediaRecorder=new MediaRecorder(s)
-      chunks=[]
-      mediaRecorder.start()
-      rec.textContent='⏹'
-      mediaRecorder.ondataavailable=e=>chunks.push(e.data)
-      mediaRecorder.onstop=()=>{
-        const b=new Blob(chunks,{type:'audio/webm'})
-        const r=new FileReader()
-        r.onload=()=>{data.push({audio:r.result,sender:'me',time:now()});save();render()}
-        r.readAsDataURL(b)
-      }
-    })
-  }
-}
+'use strict';
+const USER_KEY='user',DATA_KEY='data';
+let user=localStorage.getItem(USER_KEY);
+let dialogsData=JSON.parse(localStorage.getItem(DATA_KEY))||{alice:{name:'Алиса',messages:[]}};
+let current='alice';
+const loginScreen=document.getElementById('loginScreen');
+const appEl=document.getElementById('app');
+const dialogsEl=document.getElementById('dialogs');
+const messagesEl=document.getElementById('messages');
+const chatEl=document.getElementById('chat');
+const chatTitle=document.getElementById('chatTitle');
+const inputEl=document.getElementById('messageInput');
+const typingEl=document.getElementById('typing');
+const recordingEl=document.getElementById('recording');
+const usernameInput=document.getElementById('username');
+const photoInput=document.getElementById('photoInput');
+const videoInput=document.getElementById('videoInput');
+const recBtn=document.getElementById('recBtn');
+let mediaRecorder,chunks=[];
+function doLogin(){const n=usernameInput.value.trim();if(!n)return alert('Введите имя');localStorage.setItem(USER_KEY,n);user=n;init();}
+function init(){loginScreen.style.display='none';appEl.style.display='flex';renderDialogs();openDialog(current);}
+if(user) init();
+function toggleTheme(){document.body.classList.toggle('dark');}
+function renderDialogs(){dialogsEl.innerHTML='';for(const k in dialogsData){const d=dialogsData[k];const div=document.createElement('div');div.className='dialog';div.onclick=()=>openDialog(k);div.innerHTML=`<div class="avatar">${d.name[0]}</div>${d.name}`;dialogsEl.appendChild(div);}}
+function openDialog(k){current=k;chatTitle.textContent=dialogsData[k].name;renderMessages();chatEl.classList.add('active');}
+function renderMessages(){messagesEl.innerHTML='';dialogsData[current].messages.forEach((m,i)=>{const div=document.createElement('div');div.className='message '+m.sender;if(m.image)div.innerHTML=`<img src="${m.image}" style="max-width:200px;cursor:pointer" onclick="openImage('${m.image}')"><div class="time">${m.time}</div>`;else if(m.video)div.innerHTML=`<video controls src="${m.video}" style="max-width:200px"></video><div class="time">${m.time}</div>`;else if(m.audio)div.innerHTML=`<audio controls src="${m.audio}"></audio><div class="time">${m.time}</div>`;else div.innerHTML=`${m.text}<div class="time">${m.time}</div>`;enableSwipe(div,i);messagesEl.appendChild(div);});messagesEl.scrollTop=messagesEl.scrollHeight;}
+function enableSwipe(el,index){let x0=0;el.addEventListener('touchstart',e=>x0=e.touches[0].clientX);el.addEventListener('touchend',e=>{if(e.changedTouches[0].clientX-x0<-60){dialogsData[current].messages.splice(index,1);save();renderMessages();}});}
+function sendMessage(){const t=inputEl.value.trim();if(!t)return;dialogsData[current].messages.push({text:t,sender:'me',time:now()});inputEl.value='';save();renderMessages();simulateIncoming();}
+function simulateIncoming(){typingEl.style.display='block';setTimeout(()=>{typingEl.style.display='none';dialogsData[current].messages.push({text:'Ок 👍',sender:'other',time:now()});save();renderMessages();},1200);}
+function sendFile(input,type){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{dialogsData[current].messages.push({[type]:r.result,sender:'me',time:now()});save();renderMessages();};r.readAsDataURL(f);input.value='';}
+function toggleRecord(){if(mediaRecorder&&mediaRecorder.state==='recording'){mediaRecorder.stop();recBtn.textContent='🎤';recordingEl.style.display='none';}else{navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{mediaRecorder=new MediaRecorder(s);chunks=[];mediaRecorder.start();recBtn.textContent='⏹';recordingEl.style.display='block';mediaRecorder.ondataavailable=e=>chunks.push(e.data);mediaRecorder.onstop=()=>{const b=new Blob(chunks,{type:'audio/webm'});const r=new FileReader();r.onload=()=>{dialogsData[current].messages.push({audio:r.result,sender:'me',time:now()});save();renderMessages();};r.readAsDataURL(b);};});}}
+function openImage(src){const o=document.createElement('div');o.style='position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center';o.innerHTML=`<img src="${src}" style="max-width:90%;max-height:90%">`;o.onclick=()=>o.remove();document.body.appendChild(o);}
+function save(){localStorage.setItem(DATA_KEY,JSON.stringify(dialogsData));}
+function now(){return new Date().toLocaleTimeString().slice(0,5);}
+document.getElementById('loginBtn').onclick=doLogin;
+document.getElementById('themeBtn').onclick=toggleTheme;
+document.getElementById('sendBtn').onclick=sendMessage;
+document.getElementById('photoBtn').onclick=()=>photoInput.click();
+document.getElementById('videoBtn').onclick=()=>videoInput.click();
+photoInput.onchange=()=>sendFile(photoInput,'image');
+videoInput.onchange=()=>sendFile(videoInput,'video');
+recBtn.onclick=toggleRecord;
 </script>
 </body>
 </html>
